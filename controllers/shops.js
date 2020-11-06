@@ -1,22 +1,21 @@
-const User = require('../models/user');
+const Shop = require('../models/shop');
 const util = require('../utils/mongoErrorMapper');
-const crypto = require('../logic/crypto');
 
-async function createUser(request, response, next) {
+function create(request, response, next) {
     if (validateRequestCreateBody(request.body)) {
-        let user = new User({
+        let shop = new Shop({
             name: request.body.name,
-            username: request.body.username,
-            password: await crypto.hashPassword(request.body.password)
+            location: request.body.location,
+            products: request.body.products
         });
 
-        user.save(function (err) {
+        shop.save(function (err) {
             if (err) {
                 util.mapError(err, function(httpCode, message) {
                     response.status(httpCode).send(message);
                 });
             } else {
-                response.status(201).send('The user has been created');
+                response.status(201).send('The shop has been created');
             }
         });
     } else {
@@ -24,28 +23,25 @@ async function createUser(request, response, next) {
     }
 }
 
-function updateUser(request, response, next) {
+function update(request, response, next) {
     if (validateRequestId(request.params.id)) {
-        User.findById(request.params.id, function (err, user) {
+        Shop.findById(request.params.id, function (err, shop) {
             if (err) {
                 response.status(500).send('Oops, an error ocurred');
             }
 
-            if (!user) {
+            if (!shop) {
                 response.status(404);
             } else {
                 if (validateRequestUpdateBody(request.body)) {
-                    if (request.body.location) {
-                        user.location = request.body.location;
+                    if (request.body.description) {
+                        shop.description = request.body.description;
                     }
-                    if (request.body.name) {
-                        user.name = request.body.name;
-                    }
-                    if (request.body.admin) {
-                        user.admin = request.body.admin;
-                    }
+                    if (request.body.products) {
+                        shop.products = request.body.products;
+                    }                
 
-                    user.save(function (err) {
+                    shop.save(function (err) {
                         if (err) {
                             response.status(500).send('Oops, an error ocurred');
                         }
@@ -60,41 +56,41 @@ function updateUser(request, response, next) {
     }
 }
 
-function findUsers(request, response, next) {
-    User.find({}, function (err, users) {
+function findAll(request, response, next) {
+    Shop.find({}, function (err, shops) {
         if (err) {
             response.status(500).send(err);
         }
 
-        response.send(users);
+        response.send(shops);
     });
 }
 
-function findUsersByQuery(request, response, next) {
+function findByQuery(request, response, next) {
     if (validateRequestQueryString(request.query)) {
-        User.find({ username: request.query.username }, function (err, users) {
+        Shop.find({ description: request.query.description }, function (err, shops) {
             if (err) {
                 response.status(500).send('Oops, an error ocurred');
             }
 
-            response.send(users);
+            response.send(shops);
         });
     } else {
         response.status(400).send('The search query is not valid');
     }
 }
 
-function findUserById(request, response, next) {
+function findById(request, response, next) {
     if (validateRequestId(request.params.id)) {
-        User.findById(request.params.id, function (err, user) {
+        Shop.findById(request.params.id, function (err, shop) {
             if (err) {
-                response.status(500).send('Oops, an error ocurred' + err);
+                response.status(500).send('Oops, an error ocurred');
             }
 
             if (!user) {
                 response.status(404);
             }
-            response.send(user);
+            response.send(shop);
         });
     } else {
         response.status(400).send('The id is not valid');
@@ -110,7 +106,7 @@ function validateRequestId(id) {
 }
 
 function validateRequestQueryString(query) {
-    if (query.username) {
+    if (query.description) {
         return true;
     }
 
@@ -118,32 +114,21 @@ function validateRequestQueryString(query) {
 }
 
 function validateRequestUpdateBody(body) {
-    if (body.admin) {
-        if (typeof body.admin != 'boolean') {
-            return false;
-        }
-    }
-
     return true;
 }
 
 function validateRequestCreateBody(body) {
-    if (body.username === undefined || body.name === undefined || body.password === undefined) {
+    if (body.name === undefined) {
         return false;
-    }
-    if (body.admin) {
-        if (typeof body.admin != 'boolean') {
-            return false;
-        }
     }
 
     return true;
 }
 
 module.exports = {
-    createUser,
-    updateUser,
-    findUsers,
-    findUsersByQuery,
-    findUserById
+    create,
+    update,
+    findAll,
+    findByQuery,
+    findById
 };

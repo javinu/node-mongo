@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const user = require('../controllers/users.js');
+const users = require('../controllers/users');
 
-/* GET home page. */
-router.post('/', user.createUser);
-router.put('/:id', user.updateUser);
-router.get('/', user.findUsers);
-router.get('/search', user.findUsersByQuery);
-router.get('/:id', user.findUserById);
+router.post('/', users.createUser);
+router.put('/:id', users.updateUser);
+router.get('/', users.findUsers);
+router.get('/search', users.findUsersByQuery);
+router.get('/:id', users.findUserById);
 
 module.exports = router;
